@@ -219,7 +219,8 @@ func (e encoder) marshalMessage(m protoreflect.Message, typeURL string) error {
 	}
 
 	var err error
-	order.RangeFields(fields, order.IndexNameFieldOrder, func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+	//order.RangeFields(fields, order.IndexNameFieldOrder, func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+	order.RangeIndexNameFields(m, func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		name := fd.JSONName()
 		if e.opts.UseProtoNames {
 			name = fd.TextName()

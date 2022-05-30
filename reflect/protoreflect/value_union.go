@@ -7,6 +7,7 @@ package protoreflect
 import (
 	"fmt"
 	"math"
+	"strconv"
 )
 
 // Value is a union where only one Go type may be set at a time.
@@ -311,6 +312,10 @@ func (v Value) String() string {
 	switch v.typ {
 	case stringType:
 		return v.getString()
+	case int64Type:
+		return strconv.FormatInt(v.Int(), 10)
+	case uint64Type:
+		return strconv.FormatUint(v.Uint(), 10)
 	default:
 		return fmt.Sprint(v.Interface())
 	}

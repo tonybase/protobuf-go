@@ -22,12 +22,44 @@ var messageFieldPool = sync.Pool{
 }
 
 type (
-	// FieldRnger is an interface for visiting all fields in a message.
+	// FieldRanger is an interface for visiting all fields in a message.
 	// The protoreflect.Message type implements this interface.
 	FieldRanger interface{ Range(VisitField) }
 	// VisitField is called every time a message field is visited.
 	VisitField = func(protoreflect.FieldDescriptor, protoreflect.Value) bool
 )
+
+var fieldCache sync.Map // map[fullName]FieldDescriptor
+
+// RangeIndexNameFields .
+func RangeIndexNameFields(m protoreflect.Message, fn VisitField) {
+	var (
+		key = m.Descriptor().FullName()
+		fds []protoreflect.FieldDescriptor
+	)
+	if cached, ok := fieldCache.Load(key); ok {
+		fds = cached.([]protoreflect.FieldDescriptor)
+	} else {
+		fds = make([]protoreflect.FieldDescriptor, 0, m.Descriptor().Fields().Len())
+		// TODO: unpopulated fields
+		m.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+			fds = append(fds, fd)
+			return true
+		})
+		sort.Slice(fds, func(i, j int) bool {
+			return IndexNameFieldOrder(fds[i], fds[j])
+		})
+	}
+	for _, fd := range fds {
+		if !m.Has(fd) {
+			continue
+		}
+		if !fn(fd, m.Get(fd)) {
+			return
+		}
+	}
+	fieldCache.Store(key, fds)
+}
 
 // RangeFields iterates over the fields of fs according to the specified order.
 func RangeFields(fs FieldRanger, less FieldOrder, fn VisitField) {

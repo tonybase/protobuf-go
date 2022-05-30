@@ -224,11 +224,6 @@ func (e *Encoder) EndArray() {
 // prepareNext adds possible comma and indentation for the next value based
 // on last type and indent option. It also updates lastKind to next.
 func (e *Encoder) prepareNext(next kind) {
-	defer func() {
-		// Set lastKind to next.
-		e.lastKind = next
-	}()
-
 	if len(e.indent) == 0 {
 		// Need to add comma on the following condition.
 		if e.lastKind&(scalar|objectClose|arrayClose) != 0 &&
@@ -240,6 +235,7 @@ func (e *Encoder) prepareNext(next kind) {
 				e.out = append(e.out, ' ')
 			}
 		}
+		e.lastKind = next
 		return
 	}
 
@@ -273,4 +269,5 @@ func (e *Encoder) prepareNext(next kind) {
 			e.out = append(e.out, ' ')
 		}
 	}
+	e.lastKind = next
 }
